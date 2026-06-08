@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="A sweet birthday gift website for Leslie, made with love by Jannik."
+    >
+    <title>Happy Birthday Leslie</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="assets/data/memories.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <main class="site-shell">
+      <section class="intro" id="intro" aria-label="Birthday message" tabindex="0">
+        <div class="background-glow background-glow--one" aria-hidden="true"></div>
+        <div class="background-glow background-glow--two" aria-hidden="true"></div>
+        <div class="floaters" aria-hidden="true">
+          <span class="floater floater--one"></span>
+          <span class="floater floater--two"></span>
+          <span class="floater floater--three"></span>
+          <span class="floater floater--four"></span>
+          <span class="floater floater--five"></span>
+          <span class="floater floater--six"></span>
+        </div>
+
+        <div class="intro__content">
+          <h1 class="intro__title">Happy Birthday Leslie</h1>
+          <p class="intro__love">
+            <span class="intro__love-line intro__love-line--first">I love you</span>
+            <span class="intro__love-line intro__love-line--second">Your Jannik</span>
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="memory-wall is-hidden"
+        id="memoryWall"
+        aria-label="Floating memories"
+        aria-live="polite"
+      >
+        <div class="memory-wall__message">
+          <p>A tiny sky full of our favorite moments</p>
+        </div>
+        <div class="memory-stage" id="memoryStage"></div>
+      </section>
+    </main>
+
+    <template id="memoryItemTemplate">
+      <figure class="memory-item" tabindex="0">
+        <div class="memory-item__float">
+          <div class="memory-item__pop">
+            <div class="memory-item__inner"></div>
+          </div>
+        </div>
+      </figure>
+    </template>
+  </body>
+</html>
