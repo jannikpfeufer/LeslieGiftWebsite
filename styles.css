@@ -281,6 +281,23 @@ body {
 .floater--five { left: 79%; bottom: -14%; animation-delay: -6s; animation-duration: 14s; }
 .floater--six { left: 91%; bottom: -7%; animation-delay: -9s; animation-duration: 12s; }
 
+.confetti-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
+.confetti-canvas.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
 .intro__content {
   position: relative;
   z-index: 1;

@@ -125,9 +125,48 @@ test("intro copy starts memories from the page without a button", () => {
   assert.doesNotMatch(html, /enterButton|Start the memories|intro__button/);
   assert.doesNotMatch(html, /intro__signature/);
   assert.match(html, /intro__love-line--first">I love you<\/span>/);
-  assert.match(html, /intro__love-line--second">Your Jannik<\/span>/);
+  assert.match(html, /intro__love-line--second">Jannik<\/span>/);
   assert.doesNotMatch(js, /enterButton/);
   assert.match(js, /intro\.addEventListener\("click", startMemoryWall\)/);
+});
+
+test("confetti canvas starts on the birthday intro transition", () => {
+  const html = fs.readFileSync("index.html", "utf8");
+  const css = fs.readFileSync("styles.css", "utf8");
+  const js = fs.readFileSync("script.js", "utf8");
+
+  assert.match(html, /<canvas[^>]+id="confettiCanvas"/);
+  assert.match(css, /\.confetti-canvas[\s\S]*pointer-events:\s*none/);
+  assert.match(css, /\.confetti-canvas\.is-active[\s\S]*opacity:\s*1/);
+  assert.match(js, /confettiDurationMs:\s*1600/);
+  assert.match(js, /confettiParticleCount:\s*420/);
+  assert.match(js, /function createConfettiParticles\(/);
+  assert.match(js, /function runConfettiExplosion\(/);
+  assert.match(js, /function getBirthdayTitleOrigin\(\)/);
+  assert.doesNotMatch(js, /function getWelcomeTextOrigin\(\)/);
+  assert.match(js, /revealBirthdayIntro\(\);\s*window\.requestAnimationFrame\(\(\)\s*=>\s*\{[\s\S]*runConfettiExplosion\(getBirthdayTitleOrigin\(\),/);
+});
+
+test("createConfettiParticles emits deterministic gravity-driven particles", () => {
+  const { createConfettiParticles } = require("./script.js");
+  const randomValues = [0.25, 0.25, 0.75, 0.1, 0.9, 0.2, 0.8, 0.3, 0.7];
+  const random = () => randomValues.shift() ?? 0.5;
+
+  const particles = createConfettiParticles({
+    originX: 100,
+    originY: 80,
+    count: 1,
+    random
+  });
+
+  assert.equal(particles.length, 1);
+  assert.equal(particles[0].x, 100);
+  assert.equal(particles[0].y, 80);
+  assert.ok(particles[0].vx > -0.01 && particles[0].vx < 0.01);
+  assert.ok(particles[0].vy < 0);
+  assert.ok(particles[0].gravity > 0);
+  assert.ok(particles[0].size >= 6);
+  assert.ok(particles[0].color);
 });
 
 test("welcome gate appears before the birthday intro", () => {

@@ -19,8 +19,12 @@
     minDistancePx: 24,
     bottomSafeZonePx: 36,
     introAutoAdvanceMs: 7000,
-    memoryWallRevealMs: 950
+    memoryWallRevealMs: 950,
+    confettiDurationMs: 1600,
+    confettiParticleCount: 420
   };
+
+  const CONFETTI_COLORS = ["#f77ca7", "#b79cff", "#f4c96b", "#bfead9", "#ff8f70", "#7ab7ff"];
 
   function canSpawnItem(activeCount, maxVisibleItems) {
     return activeCount < maxVisibleItems;
@@ -79,6 +83,35 @@
     return min + random() * (max - min);
   }
 
+  function createConfettiParticles(options) {
+    const {
+      originX,
+      originY,
+      count,
+      random = Math.random,
+      colors = CONFETTI_COLORS
+    } = options;
+
+    return Array.from({ length: count }, () => {
+      const angle = randomBetween(-Math.PI, Math.PI, random);
+      const speed = randomBetween(8, 18, random);
+
+      return {
+        x: originX,
+        y: originY,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - randomBetween(5, 12, random),
+        size: randomBetween(6, 13, random),
+        widthScale: randomBetween(0.55, 1.35, random),
+        rotation: randomBetween(0, Math.PI * 2, random),
+        spin: randomBetween(-0.28, 0.28, random),
+        gravity: randomBetween(0.28, 0.52, random),
+        drag: randomBetween(0.985, 0.995, random),
+        color: colors[Math.floor(random() * colors.length)] || colors[0]
+      };
+    });
+  }
+
   function getMemoryPools(memories) {
     return {
       photos: memories.filter((memory) => memory.type === "photo"),
@@ -124,6 +157,7 @@
     const welcomeMessage = document.getElementById("welcomeMessage");
     const landingImage = document.getElementById("landingImage");
     const wrongAnswerImage = document.getElementById("wrongAnswerImage");
+    const confettiCanvas = document.getElementById("confettiCanvas");
     const readyActions = document.getElementById("readyActions");
     const pleaseActions = document.getElementById("pleaseActions");
     const acceptGift = document.getElementById("acceptGift");
@@ -139,6 +173,7 @@
       !welcomeMessage ||
       !landingImage ||
       !wrongAnswerImage ||
+      !confettiCanvas ||
       !readyActions ||
       !pleaseActions ||
       !acceptGift ||
@@ -158,20 +193,125 @@
       hasStarted: false,
       spawnTimer: null,
       introTimer: null,
-      revealTimer: null
+      revealTimer: null,
+      confettiFrameId: null,
+      isEnteringGift: false
     };
 
     const readyQuestion = "Coucou mon Amoureuse, are you ready to see your gift?";
     const pleaseMessage =
       '<span class="welcome__message-line welcome__message-line--main">Wrong answer!</span><span class="welcome__message-line welcome__message-line--sub">i prepared this gift for you, please take a look</span>';
 
-    function showBirthdayIntro() {
+    function getBirthdayTitleOrigin() {
+      const title = intro.querySelector(".intro__title");
+      const rect = title.getBoundingClientRect();
+
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function sizeConfettiCanvas() {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      const rect = confettiCanvas.getBoundingClientRect();
+
+      confettiCanvas.width = Math.max(1, Math.round(rect.width * ratio));
+      confettiCanvas.height = Math.max(1, Math.round(rect.height * ratio));
+
+      return ratio;
+    }
+
+    function revealBirthdayIntro() {
       welcome.classList.add("is-leaving");
       welcome.setAttribute("aria-hidden", "true");
       intro.classList.remove("is-hidden");
       intro.classList.add("is-ready");
       intro.focus();
       state.introTimer = window.setTimeout(startMemoryWall, config.introAutoAdvanceMs);
+    }
+
+    function runConfettiExplosion(origin, onComplete) {
+      const context = confettiCanvas.getContext("2d");
+
+      if (!context) {
+        onComplete();
+        return;
+      }
+
+      const ratio = sizeConfettiCanvas();
+      const particles = createConfettiParticles({
+        originX: origin.x,
+        originY: origin.y,
+        count: config.confettiParticleCount,
+        random
+      });
+      let startTime = null;
+
+      confettiCanvas.classList.add("is-active");
+
+      function draw(timestamp) {
+        if (startTime === null) {
+          startTime = timestamp;
+        }
+
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / config.confettiDurationMs, 1);
+        const timeScale = 1.12;
+
+        context.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        context.save();
+        context.scale(ratio, ratio);
+
+        particles.forEach((particle) => {
+          particle.vx *= particle.drag;
+          particle.vy += particle.gravity * timeScale;
+          particle.x += particle.vx * timeScale;
+          particle.y += particle.vy * timeScale;
+          particle.rotation += particle.spin * timeScale;
+
+          context.save();
+          context.globalAlpha = 1 - Math.max(0, progress - 0.74) / 0.26;
+          context.translate(particle.x, particle.y);
+          context.rotate(particle.rotation);
+          context.fillStyle = particle.color;
+          context.fillRect(
+            -particle.size / 2,
+            -(particle.size * particle.widthScale) / 2,
+            particle.size,
+            particle.size * particle.widthScale
+          );
+          context.restore();
+        });
+
+        context.restore();
+
+        if (progress < 1) {
+          state.confettiFrameId = window.requestAnimationFrame(draw);
+          return;
+        }
+
+        context.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+        confettiCanvas.classList.remove("is-active");
+        state.confettiFrameId = null;
+        onComplete();
+      }
+
+      state.confettiFrameId = window.requestAnimationFrame(draw);
+    }
+
+    function showBirthdayIntro() {
+      if (state.isEnteringGift) {
+        return;
+      }
+
+      state.isEnteringGift = true;
+      acceptGift.disabled = true;
+      declineGift.disabled = true;
+      revealBirthdayIntro();
+      window.requestAnimationFrame(() => {
+        runConfettiExplosion(getBirthdayTitleOrigin(), () => {});
+      });
     }
 
     function showPleaseMessage() {
@@ -388,6 +528,9 @@
         window.clearInterval(state.spawnTimer);
         window.clearTimeout(state.introTimer);
         window.clearTimeout(state.revealTimer);
+        if (state.confettiFrameId !== null) {
+          window.cancelAnimationFrame(state.confettiFrameId);
+        }
         state.activeItems.forEach((item) => {
           window.clearTimeout(item.timeoutId);
           item.element.remove();
@@ -410,6 +553,7 @@
   return {
     CONFIG,
     canSpawnItem,
+    createConfettiParticles,
     findNonOverlappingPosition,
     initBirthdaySite,
     pickMemory,
