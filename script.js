@@ -120,12 +120,35 @@
     const config = { ...CONFIG, ...(options.config || {}) };
     const random = options.random || Math.random;
     const memories = options.memories || window.memories || [];
+    const welcome = document.getElementById("welcome");
+    const welcomeMessage = document.getElementById("welcomeMessage");
+    const landingImage = document.getElementById("landingImage");
+    const wrongAnswerImage = document.getElementById("wrongAnswerImage");
+    const readyActions = document.getElementById("readyActions");
+    const pleaseActions = document.getElementById("pleaseActions");
+    const acceptGift = document.getElementById("acceptGift");
+    const declineGift = document.getElementById("declineGift");
+    const backToQuestion = document.getElementById("backToQuestion");
     const intro = document.getElementById("intro");
     const memoryWall = document.getElementById("memoryWall");
     const stage = document.getElementById("memoryStage");
     const template = document.getElementById("memoryItemTemplate");
 
-    if (!intro || !memoryWall || !stage || !template) {
+    if (
+      !welcome ||
+      !welcomeMessage ||
+      !landingImage ||
+      !wrongAnswerImage ||
+      !readyActions ||
+      !pleaseActions ||
+      !acceptGift ||
+      !declineGift ||
+      !backToQuestion ||
+      !intro ||
+      !memoryWall ||
+      !stage ||
+      !template
+    ) {
       return null;
     }
 
@@ -137,6 +160,35 @@
       introTimer: null,
       revealTimer: null
     };
+
+    const readyQuestion = "Coucou mon Amoureuse, are you ready to see your gift?";
+    const pleaseMessage =
+      '<span class="welcome__message-line welcome__message-line--main">Wrong answer!</span><span class="welcome__message-line welcome__message-line--sub">i prepared this gift for you, please take a look</span>';
+
+    function showBirthdayIntro() {
+      welcome.classList.add("is-leaving");
+      welcome.setAttribute("aria-hidden", "true");
+      intro.classList.remove("is-hidden");
+      intro.classList.add("is-ready");
+      intro.focus();
+      state.introTimer = window.setTimeout(startMemoryWall, config.introAutoAdvanceMs);
+    }
+
+    function showPleaseMessage() {
+      welcomeMessage.innerHTML = pleaseMessage;
+      landingImage.classList.add("is-hidden");
+      wrongAnswerImage.classList.remove("is-hidden");
+      readyActions.classList.add("is-hidden");
+      pleaseActions.classList.remove("is-hidden");
+    }
+
+    function showReadyQuestion() {
+      welcomeMessage.textContent = readyQuestion;
+      wrongAnswerImage.classList.add("is-hidden");
+      landingImage.classList.remove("is-hidden");
+      pleaseActions.classList.add("is-hidden");
+      readyActions.classList.remove("is-hidden");
+    }
 
     function activeRects() {
       const stageRect = stage.getBoundingClientRect();
@@ -327,7 +379,9 @@
       }
     });
 
-    state.introTimer = window.setTimeout(startMemoryWall, config.introAutoAdvanceMs);
+    acceptGift.addEventListener("click", showBirthdayIntro);
+    declineGift.addEventListener("click", showPleaseMessage);
+    backToQuestion.addEventListener("click", showReadyQuestion);
 
     return {
       destroy() {
@@ -342,6 +396,9 @@
       },
       spawnMemory,
       startMemoryWall,
+      showBirthdayIntro,
+      showPleaseMessage,
+      showReadyQuestion,
       state
     };
   }

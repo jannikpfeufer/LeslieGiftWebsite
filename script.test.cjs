@@ -130,6 +130,26 @@ test("intro copy starts memories from the page without a button", () => {
   assert.match(js, /intro\.addEventListener\("click", startMemoryWall\)/);
 });
 
+test("welcome gate appears before the birthday intro", () => {
+  const html = fs.readFileSync("index.html", "utf8");
+  const css = fs.readFileSync("styles.css", "utf8");
+  const js = fs.readFileSync("script.js", "utf8");
+
+  assert.match(html, /id="welcome"/);
+  assert.match(html, /Coucou mon Amoureuse, are you ready to see your gift\?/);
+  assert.match(html, /id="acceptGift"/);
+  assert.match(html, /id="declineGift"/);
+  assert.match(html, /id="backToQuestion"/);
+  assert.match(html, /class="intro is-hidden"/);
+  assert.match(css, /\.welcome[\s\S]*place-items:\s*center/);
+  assert.match(css, /\.welcome__button--yes[\s\S]*#2f9e44/);
+  assert.match(css, /\.welcome__button--no[\s\S]*#d94848/);
+  assert.match(css, /\.welcome__button--back[\s\S]*#2f80ed/);
+  assert.match(js, /function showBirthdayIntro\(\)/);
+  assert.match(js, /function showPleaseMessage\(\)/);
+  assert.match(js, /function showReadyQuestion\(\)/);
+});
+
 test("intro love text fades in place later and spawn area has extra bottom space", () => {
   const css = fs.readFileSync("styles.css", "utf8");
 
