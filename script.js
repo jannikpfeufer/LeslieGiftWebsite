@@ -20,8 +20,8 @@
     bottomSafeZonePx: 36,
     introAutoAdvanceMs: 7000,
     memoryWallRevealMs: 950,
-    confettiDurationMs: 1600,
-    confettiParticleCount: 420
+    confettiDurationMs: 2200,
+    confettiParticleCount: 680
   };
 
   const CONFETTI_COLORS = ["#f77ca7", "#b79cff", "#f4c96b", "#bfead9", "#ff8f70", "#7ab7ff"];
@@ -94,14 +94,14 @@
 
     return Array.from({ length: count }, () => {
       const angle = randomBetween(-Math.PI, Math.PI, random);
-      const speed = randomBetween(8, 18, random);
+      const speed = randomBetween(10, 24, random);
 
       return {
         x: originX,
         y: originY,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - randomBetween(5, 12, random),
-        size: randomBetween(6, 13, random),
+        vy: Math.sin(angle) * speed - randomBetween(7, 16, random),
+        size: randomBetween(5, 14, random),
         widthScale: randomBetween(0.55, 1.35, random),
         rotation: randomBetween(0, Math.PI * 2, random),
         spin: randomBetween(-0.28, 0.28, random),

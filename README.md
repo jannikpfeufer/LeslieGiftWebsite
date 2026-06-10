@@ -12,7 +12,7 @@ then loops through floating photos and little love-note easter eggs.
 ```js
 {
   type: "photo",
-  src: "assets/photos/photo4.jpg",
+  src: "assets/photos/niquer01.jpg",
   alt: "Leslie and Jannik",
   caption: "A caption only you two understand"
 }

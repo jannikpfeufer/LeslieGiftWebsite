@@ -138,8 +138,8 @@ test("confetti canvas starts on the birthday intro transition", () => {
   assert.match(html, /<canvas[^>]+id="confettiCanvas"/);
   assert.match(css, /\.confetti-canvas[\s\S]*pointer-events:\s*none/);
   assert.match(css, /\.confetti-canvas\.is-active[\s\S]*opacity:\s*1/);
-  assert.match(js, /confettiDurationMs:\s*1600/);
-  assert.match(js, /confettiParticleCount:\s*420/);
+  assert.match(js, /confettiDurationMs:\s*2200/);
+  assert.match(js, /confettiParticleCount:\s*680/);
   assert.match(js, /function createConfettiParticles\(/);
   assert.match(js, /function runConfettiExplosion\(/);
   assert.match(js, /function getBirthdayTitleOrigin\(\)/);

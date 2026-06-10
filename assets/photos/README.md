@@ -3,9 +3,9 @@ Put your real photos in this folder and keep the filenames in
 
 Suggested first filenames:
 
-- `photo1.jpg`
-- `photo2.jpg`
-- `photo3.jpg`
+- `niquer01.jpg`
+- `niquer02.jpg`
+- `niquer03.jpg`
 
 You can add more photos by copying them here and adding another object to the
 `window.memories` array.
