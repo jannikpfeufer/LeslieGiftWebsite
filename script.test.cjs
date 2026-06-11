@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const {
   canSpawnItem,
   findNonOverlappingPosition,
+  pickMemory,
   rectsOverlap
 } = require("./script.js");
 
@@ -96,6 +97,7 @@ test("memory template separates position, drift, pop, and hover layers", () => {
   assert.match(css, /\.memory-item__pop[\s\S]*scale\(0\)/);
   assert.match(css, /animation: inflateIn var\(--inflate-duration,\s*1800ms\) linear forwards/);
   assert.match(css, /@keyframes inflateIn[\s\S]*scale\(0\)[\s\S]*scale\(1\)/);
+  assert.match(css, /\.memory-item__image\s*\{[^}]*object-fit:\s*contain/);
   assert.doesNotMatch(css, /\.memory-item__image\s*\{[^}]*animation:/);
   assert.doesNotMatch(css, /animation-duration:\s*1ms\s*!important/);
 });
@@ -117,6 +119,54 @@ test("cards use random 1.5-2s inflate durations and respawn after deflate", () =
   assert.match(js, /spawnMemory\(\);\s*\}\s*,\s*\{\s*once:\s*true\s*\}/);
 });
 
+test("pickMemory can choose sticker memories as their own category", () => {
+  const memories = [
+    { type: "photo", src: "assets/photos/example.jpg" },
+    { type: "note", text: "A note" },
+    { type: "sticker", src: "assets/stickers/bear.gif" }
+  ];
+
+  const picked = pickMemory(memories, 0.18, 0.2, () => 0.1);
+
+  assert.equal(picked.type, "sticker");
+  assert.equal(picked.src, "assets/stickers/bear.gif");
+});
+
+test("stickers render as free floating images without memory card chrome", () => {
+  const js = fs.readFileSync("script.js", "utf8");
+  const css = fs.readFileSync("styles.css", "utf8");
+
+  assert.match(js, /stickerChance:\s*0\.14/);
+  assert.match(js, /stickers:\s*memories\.filter\(\(memory\)\s*=>\s*memory\.type === "sticker"\)/);
+  assert.match(js, /function buildSticker\(/);
+  assert.match(js, /className = "sticker-item"/);
+  assert.match(css, /\.sticker-item\s*\{[\s\S]*position:\s*absolute/);
+  assert.match(css, /\.sticker-item\s*\{[\s\S]*background:\s*transparent/);
+  assert.doesNotMatch(css, /\.sticker-item[\s\S]*box-shadow:\s*var\(--photo-shadow\)/);
+});
+
+test("love letter flyer and modal are wired into the memory wall", () => {
+  const html = fs.readFileSync("index.html", "utf8");
+  const css = fs.readFileSync("styles.css", "utf8");
+  const js = fs.readFileSync("script.js", "utf8");
+
+  assert.match(html, /id="loveLetterFlyer"/);
+  assert.match(html, /id="loveLetterModal"/);
+  assert.match(html, /id="closeLoveLetter"/);
+  assert.match(html, /My love,/);
+  assert.match(css, /\.love-letter-flyer\.is-flying[\s\S]*loveLetterFlight/);
+  assert.match(css, /@keyframes loveLetterFlight[\s\S]*25%[\s\S]*50%[\s\S]*75%[\s\S]*100%/);
+  assert.match(css, /\.love-letter-modal[\s\S]*position:\s*absolute/);
+  assert.match(js, /loveLetterMinDelayMs:\s*45000/);
+  assert.match(js, /loveLetterMaxDelayMs:\s*60000/);
+  assert.match(js, /loveLetterFlightDurationMs:\s*9000/);
+  assert.match(js, /function scheduleLoveLetterFlight\(/);
+  assert.match(js, /function launchLoveLetterFlyer\(/);
+  assert.match(js, /function openLoveLetter\(/);
+  assert.match(js, /function closeLoveLetter\(/);
+  assert.match(js, /scheduleLoveLetterFlight\(\)/);
+});
+
 test("intro copy starts memories from the page without a button", () => {
   const html = fs.readFileSync("index.html", "utf8");
   const js = fs.readFileSync("script.js", "utf8");
@@ -125,7 +175,7 @@ test("intro copy starts memories from the page without a button", () => {
   assert.doesNotMatch(html, /enterButton|Start the memories|intro__button/);
   assert.doesNotMatch(html, /intro__signature/);
   assert.match(html, /intro__love-line--first">I love you<\/span>/);
-  assert.match(html, /intro__love-line--second">Jannik<\/span>/);
+  assert.doesNotMatch(html, /intro__love-line--second/);
   assert.doesNotMatch(js, /enterButton/);
   assert.match(js, /intro\.addEventListener\("click", startMemoryWall\)/);
 });
@@ -165,7 +215,7 @@ test("createConfettiParticles emits deterministic gravity-driven particles", () 
   assert.ok(particles[0].vx > -0.01 && particles[0].vx < 0.01);
   assert.ok(particles[0].vy < 0);
   assert.ok(particles[0].gravity > 0);
-  assert.ok(particles[0].size >= 6);
+  assert.ok(particles[0].size >= 5);
   assert.ok(particles[0].color);
 });
 

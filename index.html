@@ -81,7 +81,6 @@
           <h1 class="intro__title">Happy Birthday Leslie</h1>
           <p class="intro__love">
             <span class="intro__love-line intro__love-line--first">I love you</span>
-            <span class="intro__love-line intro__love-line--second">Jannik</span>
           </p>
         </div>
       </section>
@@ -96,6 +95,41 @@
           <p>A sky full of our memories</p>
         </div>
         <div class="memory-stage" id="memoryStage"></div>
+      </section>
+
+      <button
+        class="love-letter-flyer is-hidden"
+        id="loveLetterFlyer"
+        type="button"
+        aria-label="Open love letter"
+      >
+        <span class="love-letter-flyer__paper" aria-hidden="true">
+          <span class="love-letter-flyer__heart">&hearts;</span>
+        </span>
+      </button>
+
+      <section
+        class="love-letter-modal is-hidden"
+        id="loveLetterModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="loveLetterTitle"
+      >
+        <div class="love-letter-modal__panel">
+          <button
+            class="love-letter-modal__close"
+            id="closeLoveLetter"
+            type="button"
+            aria-label="Close love letter"
+          >
+            &times;
+          </button>
+          <h2 class="love-letter-modal__title" id="loveLetterTitle">My love,</h2>
+          <p class="love-letter-modal__text">
+            This is a placeholder for your love letter. Write something here that feels like only
+            the two of you could understand it.
+          </p>
+        </div>
       </section>
     </main>
 

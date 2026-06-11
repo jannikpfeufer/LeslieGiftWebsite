@@ -12,16 +12,20 @@
   const CONFIG = {
     maxVisibleItems: 4,
     spawnIntervalMs: 1800,
-    photoLifetimeMs: 5000,
-    inflateDurationMinMs: 1500,
-    inflateDurationMaxMs: 2000,
+    photoLifetimeMs: 4000,
+    inflateDurationMinMs: 1000,
+    inflateDurationMaxMs: 1500,
     noteChance: 0.18,
+    stickerChance: 0.14,
     minDistancePx: 24,
     bottomSafeZonePx: 36,
     introAutoAdvanceMs: 7000,
     memoryWallRevealMs: 950,
     confettiDurationMs: 2200,
-    confettiParticleCount: 680
+    confettiParticleCount: 680,
+    loveLetterMinDelayMs: 45000,
+    loveLetterMaxDelayMs: 60000,
+    loveLetterFlightDurationMs: 9000
   };
 
   const CONFETTI_COLORS = ["#f77ca7", "#b79cff", "#f4c96b", "#bfead9", "#ff8f70", "#7ab7ff"];
@@ -115,14 +119,32 @@
   function getMemoryPools(memories) {
     return {
       photos: memories.filter((memory) => memory.type === "photo"),
-      notes: memories.filter((memory) => memory.type === "note")
+      notes: memories.filter((memory) => memory.type === "note"),
+      stickers: memories.filter((memory) => memory.type === "sticker")
     };
   }
 
-  function pickMemory(memories, noteChance, random) {
+  function pickMemory(memories, noteChance, stickerChance, random) {
+    if (typeof stickerChance === "function") {
+      random = stickerChance;
+      stickerChance = 0;
+    }
+
     const pools = getMemoryPools(memories);
-    const shouldPickNote = pools.notes.length > 0 && random() < noteChance;
-    const pool = shouldPickNote || pools.photos.length === 0 ? pools.notes : pools.photos;
+    const roll = random();
+    const shouldPickSticker = pools.stickers.length > 0 && roll < stickerChance;
+    const shouldPickNote = pools.notes.length > 0 && roll < stickerChance + noteChance;
+    let pool = pools.photos;
+
+    if (shouldPickSticker) {
+      pool = pools.stickers;
+    } else if (shouldPickNote || pools.photos.length === 0) {
+      pool = pools.notes;
+    }
+
+    if (pool.length === 0) {
+      pool = pools.stickers.length > 0 ? pools.stickers : pools.notes;
+    }
 
     if (pool.length === 0) {
       return null;
@@ -132,6 +154,15 @@
   }
 
   function getItemSize(type, stageRect) {
+    if (type === "sticker") {
+      const size = Math.round(clamp(stageRect.width * 0.16, 96, 180));
+
+      return {
+        width: size,
+        height: size
+      };
+    }
+
     if (type === "note") {
       return {
         width: Math.round(clamp(stageRect.width * 0.24, 170, 235)),
@@ -167,6 +198,9 @@
     const memoryWall = document.getElementById("memoryWall");
     const stage = document.getElementById("memoryStage");
     const template = document.getElementById("memoryItemTemplate");
+    const loveLetterFlyer = document.getElementById("loveLetterFlyer");
+    const loveLetterModal = document.getElementById("loveLetterModal");
+    const closeLoveLetterButton = document.getElementById("closeLoveLetter");
 
     if (
       !welcome ||
@@ -182,7 +216,10 @@
       !intro ||
       !memoryWall ||
       !stage ||
-      !template
+      !template ||
+      !loveLetterFlyer ||
+      !loveLetterModal ||
+      !closeLoveLetterButton
     ) {
       return null;
     }
@@ -195,6 +232,8 @@
       introTimer: null,
       revealTimer: null,
       confettiFrameId: null,
+      loveLetterTimer: null,
+      loveLetterFlightTimer: null,
       isEnteringGift: false
     };
 
@@ -413,7 +452,34 @@
       return [note];
     }
 
+    function buildSticker(memory) {
+      const sticker = document.createElement("img");
+      sticker.className = "sticker-item";
+      sticker.src = memory.src;
+      sticker.alt = memory.alt || "A cute sticker";
+      sticker.loading = "lazy";
+      sticker.decoding = "async";
+      return sticker;
+    }
+
     function createItemElement(memory, size, position) {
+      if (memory.type === "sticker") {
+        const sticker = buildSticker(memory);
+        const rotation = `${randomBetween(-12, 12, random).toFixed(2)}deg`;
+
+        sticker.style.setProperty("--item-width", `${size.width}px`);
+        sticker.style.setProperty("--item-height", `${size.height}px`);
+        sticker.style.setProperty("--item-left", `${position.left}px`);
+        sticker.style.setProperty("--item-top", `${position.top}px`);
+        sticker.style.setProperty("--item-rotation", rotation);
+        sticker.style.setProperty(
+          "--inflate-duration",
+          `${Math.round(randomBetween(config.inflateDurationMinMs, config.inflateDurationMaxMs, random))}ms`
+        );
+
+        return sticker;
+      }
+
       const fragment = template.content.cloneNode(true);
       const item = fragment.querySelector(".memory-item");
       const inner = item.querySelector(".memory-item__inner");
@@ -441,7 +507,7 @@
         return;
       }
 
-      const memory = pickMemory(memories, config.noteChance, random);
+      const memory = pickMemory(memories, config.noteChance, config.stickerChance, random);
 
       if (!memory) {
         return;
@@ -488,6 +554,61 @@
       scheduleRemoval(itemState);
     }
 
+    function getLoveLetterDelay() {
+      return Math.round(
+        randomBetween(config.loveLetterMinDelayMs, config.loveLetterMaxDelayMs, random)
+      );
+    }
+
+    function scheduleLoveLetterFlight() {
+      window.clearTimeout(state.loveLetterTimer);
+      state.loveLetterTimer = window.setTimeout(launchLoveLetterFlyer, getLoveLetterDelay());
+    }
+
+    function hideLoveLetterFlyer() {
+      loveLetterFlyer.classList.add("is-hidden");
+      loveLetterFlyer.classList.remove("is-flying");
+    }
+
+    function launchLoveLetterFlyer() {
+      if (!state.hasStarted || !loveLetterModal.classList.contains("is-hidden")) {
+        scheduleLoveLetterFlight();
+        return;
+      }
+
+      const top = Math.round(randomBetween(28, 68, random));
+      loveLetterFlyer.style.setProperty("--letter-top", `${top}vh`);
+      loveLetterFlyer.style.setProperty(
+        "--letter-flight-duration",
+        `${config.loveLetterFlightDurationMs}ms`
+      );
+      loveLetterFlyer.classList.remove("is-hidden");
+      loveLetterFlyer.classList.remove("is-flying");
+      void loveLetterFlyer.offsetWidth;
+      loveLetterFlyer.classList.add("is-flying");
+
+      window.clearTimeout(state.loveLetterFlightTimer);
+      state.loveLetterFlightTimer = window.setTimeout(() => {
+        hideLoveLetterFlyer();
+        scheduleLoveLetterFlight();
+      }, config.loveLetterFlightDurationMs);
+    }
+
+    function openLoveLetter() {
+      window.clearTimeout(state.loveLetterFlightTimer);
+      hideLoveLetterFlyer();
+      loveLetterModal.classList.remove("is-hidden");
+      closeLoveLetterButton.focus();
+    }
+
+    function closeLoveLetter() {
+      loveLetterModal.classList.add("is-hidden");
+
+      if (state.hasStarted) {
+        scheduleLoveLetterFlight();
+      }
+    }
+
     function startMemoryWall() {
       if (state.hasStarted) {
         return;
@@ -508,6 +629,7 @@
         }
 
         state.spawnTimer = window.setInterval(spawnMemory, config.spawnIntervalMs);
+        scheduleLoveLetterFlight();
       }, config.memoryWallRevealMs);
     }
 
@@ -522,12 +644,26 @@
     acceptGift.addEventListener("click", showBirthdayIntro);
     declineGift.addEventListener("click", showPleaseMessage);
     backToQuestion.addEventListener("click", showReadyQuestion);
+    loveLetterFlyer.addEventListener("click", openLoveLetter);
+    closeLoveLetterButton.addEventListener("click", closeLoveLetter);
+    loveLetterModal.addEventListener("click", (event) => {
+      if (event.target === loveLetterModal) {
+        closeLoveLetter();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !loveLetterModal.classList.contains("is-hidden")) {
+        closeLoveLetter();
+      }
+    });
 
     return {
       destroy() {
         window.clearInterval(state.spawnTimer);
         window.clearTimeout(state.introTimer);
         window.clearTimeout(state.revealTimer);
+        window.clearTimeout(state.loveLetterTimer);
+        window.clearTimeout(state.loveLetterFlightTimer);
         if (state.confettiFrameId !== null) {
           window.cancelAnimationFrame(state.confettiFrameId);
         }
@@ -539,6 +675,10 @@
       },
       spawnMemory,
       startMemoryWall,
+      scheduleLoveLetterFlight,
+      launchLoveLetterFlyer,
+      openLoveLetter,
+      closeLoveLetter,
       showBirthdayIntro,
       showPleaseMessage,
       showReadyQuestion,
