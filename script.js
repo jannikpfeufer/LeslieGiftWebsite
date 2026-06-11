@@ -15,8 +15,8 @@
     photoLifetimeMs: 4000,
     inflateDurationMinMs: 1000,
     inflateDurationMaxMs: 1500,
-    noteChance: 0.18,
-    stickerChance: 0.14,
+    noteChance: 0.08,
+    stickerChance: 0.12,
     minDistancePx: 24,
     bottomSafeZonePx: 36,
     introAutoAdvanceMs: 7000,
@@ -25,10 +25,59 @@
     confettiParticleCount: 680,
     loveLetterMinDelayMs: 45000,
     loveLetterMaxDelayMs: 60000,
-    loveLetterFlightDurationMs: 9000
+    loveLetterFlightDurationMs: 9000,
+    crazySpawnIntervalMs: 150,
+    crazyBurstCount: 8,
+    crazyMaxItems: 60,
+    leslieCrazyMaxItems: 120
   };
 
   const CONFETTI_COLORS = ["#f77ca7", "#b79cff", "#f4c96b", "#bfead9", "#ff8f70", "#7ab7ff"];
+  const LESLIE_LETTER_POINTS = [
+    [0.02, 0.08],
+    [0.02, 0.24],
+    [0.02, 0.4],
+    [0.02, 0.56],
+    [0.02, 0.72],
+    [0.02, 0.88],
+    [0.11, 0.88],
+    [0.2, 0.88],
+    [0.31, 0.1],
+    [0.22, 0.1],
+    [0.22, 0.28],
+    [0.22, 0.46],
+    [0.31, 0.46],
+    [0.22, 0.64],
+    [0.22, 0.82],
+    [0.31, 0.82],
+    [0.34, 0.18],
+    [0.43, 0.1],
+    [0.52, 0.18],
+    [0.43, 0.46],
+    [0.35, 0.7],
+    [0.43, 0.86],
+    [0.53, 0.76],
+    [0.58, 0.08],
+    [0.58, 0.24],
+    [0.58, 0.4],
+    [0.58, 0.56],
+    [0.58, 0.72],
+    [0.58, 0.88],
+    [0.68, 0.08],
+    [0.68, 0.24],
+    [0.68, 0.4],
+    [0.68, 0.56],
+    [0.68, 0.72],
+    [0.68, 0.88],
+    [0.8, 0.1],
+    [0.71, 0.1],
+    [0.71, 0.28],
+    [0.71, 0.46],
+    [0.8, 0.46],
+    [0.71, 0.64],
+    [0.71, 0.82],
+    [0.8, 0.82]
+  ];
 
   function canSpawnItem(activeCount, maxVisibleItems) {
     return activeCount < maxVisibleItems;
@@ -234,6 +283,19 @@
       confettiFrameId: null,
       loveLetterTimer: null,
       loveLetterFlightTimer: null,
+      crazySpawnTimer: null,
+      crazyBurstTimers: [],
+      crazyItems: new Set(),
+      isCrazyMode: false,
+      leslieCrazySpawnTimer: null,
+      leslieCrazyBurstTimers: [],
+      leslieCrazyItems: new Set(),
+      leslieLetterIndex: 0,
+      isLeslieCrazyMode: false,
+      niquerCrazySpawnTimer: null,
+      niquerCrazyBurstTimers: [],
+      niquerCrazyItems: new Set(),
+      isNiquerCrazyMode: false,
       isEnteringGift: false
     };
 
@@ -554,6 +616,374 @@
       scheduleRemoval(itemState);
     }
 
+    function findCrazyPosition(size, stageRect) {
+      const maxLeft = Math.max(0, stageRect.width - size.width);
+      const maxTop = Math.max(0, stageRect.height - size.height);
+
+      return {
+        left: Math.round(random() * maxLeft),
+        top: Math.round(random() * maxTop)
+      };
+    }
+
+    function spawnCrazyMemory() {
+      const memory = pickMemory(memories, config.noteChance, config.stickerChance, random);
+
+      if (!memory) {
+        return;
+      }
+
+      const stageRect = stage.getBoundingClientRect();
+      const size = getItemSize(memory.type, stageRect);
+      const position = findCrazyPosition(size, stageRect);
+      const element = createItemElement(memory, size, position);
+
+      element.classList.add("is-crazy-memory");
+      element.style.zIndex = String(20 + (state.counter % 300));
+      state.counter += 1;
+      state.crazyItems.add(element);
+      stage.appendChild(element);
+      trimCrazyItems();
+    }
+
+    function getLeslieStickerMemory() {
+      return (
+        memories.find(
+          (memory) => memory.type === "sticker" && /LeslieSticker\.png$/i.test(memory.src || "")
+        ) || {
+          type: "sticker",
+          src: "assets/stickers/LeslieSticker.png",
+          alt: "Leslie sticker"
+        }
+      );
+    }
+
+    function findLeslieLetterPosition(size, stageRect) {
+      if (state.leslieLetterIndex >= LESLIE_LETTER_POINTS.length) {
+        return findCrazyPosition(size, stageRect);
+      }
+
+      const point = LESLIE_LETTER_POINTS[state.leslieLetterIndex % LESLIE_LETTER_POINTS.length];
+      const maxLeft = Math.max(0, stageRect.width - size.width);
+      const maxTop = Math.max(0, stageRect.height - size.height);
+      const wordWidth = Math.min(maxLeft, stageRect.width * 0.94);
+      const wordHeight = Math.min(maxTop, stageRect.height * 0.72);
+      const originLeft = Math.max(0, (stageRect.width - wordWidth - size.width) / 2);
+      const originTop = Math.max(0, (stageRect.height - wordHeight - size.height) / 2);
+      const jitterX = randomBetween(-10, 10, random);
+      const jitterY = randomBetween(-10, 10, random);
+
+      state.leslieLetterIndex += 1;
+
+      return {
+        left: Math.round(clamp(originLeft + point[0] * wordWidth + jitterX, 0, maxLeft)),
+        top: Math.round(clamp(originTop + point[1] * wordHeight + jitterY, 0, maxTop))
+      };
+    }
+
+    function spawnLeslieCrazyMemory() {
+      const memory = getLeslieStickerMemory();
+      const stageRect = stage.getBoundingClientRect();
+      const size = getItemSize(memory.type, stageRect);
+      const position = findLeslieLetterPosition(size, stageRect);
+      const element = createItemElement(memory, size, position);
+
+      element.classList.add("is-crazy-memory", "is-leslie-crazy-memory");
+      element.style.zIndex = String(20 + (state.counter % 300));
+      state.counter += 1;
+      state.leslieCrazyItems.add(element);
+      stage.appendChild(element);
+      trimLeslieCrazyItems();
+    }
+
+    function getNiquerMemories() {
+      return memories.filter(
+        (memory) => memory.type === "photo" && /\/niquer(0[1-9]|1[0-4])\./i.test(memory.src || "")
+      );
+    }
+
+    function pickNiquerMemory() {
+      const niquerMemories = getNiquerMemories();
+
+      if (niquerMemories.length === 0) {
+        return null;
+      }
+
+      return niquerMemories[Math.floor(random() * niquerMemories.length)];
+    }
+
+    function spawnNiquerCrazyMemory() {
+      const memory = pickNiquerMemory();
+
+      if (!memory) {
+        return;
+      }
+
+      const stageRect = stage.getBoundingClientRect();
+      const size = getItemSize(memory.type, stageRect);
+      const position = findCrazyPosition(size, stageRect);
+      const element = createItemElement(memory, size, position);
+
+      element.classList.add("is-crazy-memory", "is-niquer-crazy-memory");
+      element.style.zIndex = String(20 + (state.counter % 300));
+      state.counter += 1;
+      state.niquerCrazyItems.add(element);
+      stage.appendChild(element);
+      trimNiquerCrazyItems();
+    }
+
+    function stopNormalSpawnTimer() {
+      window.clearInterval(state.spawnTimer);
+      state.spawnTimer = null;
+    }
+
+    function clearActiveRemovalTimers() {
+      state.activeItems.forEach((item) => {
+        window.clearTimeout(item.timeoutId);
+        item.isExpired = false;
+      });
+    }
+
+    function trimCrazyItems() {
+      while (state.crazyItems.size > config.crazyMaxItems) {
+        const oldestItem = state.crazyItems.values().next().value;
+
+        if (!oldestItem) {
+          return;
+        }
+
+        oldestItem.remove();
+        state.crazyItems.delete(oldestItem);
+      }
+    }
+
+    function trimLeslieCrazyItems() {
+      while (state.leslieCrazyItems.size > config.leslieCrazyMaxItems) {
+        const oldestItem = state.leslieCrazyItems.values().next().value;
+
+        if (!oldestItem) {
+          return;
+        }
+
+        oldestItem.remove();
+        state.leslieCrazyItems.delete(oldestItem);
+      }
+    }
+
+    function trimNiquerCrazyItems() {
+      while (state.niquerCrazyItems.size > config.crazyMaxItems) {
+        const oldestItem = state.niquerCrazyItems.values().next().value;
+
+        if (!oldestItem) {
+          return;
+        }
+
+        oldestItem.remove();
+        state.niquerCrazyItems.delete(oldestItem);
+      }
+    }
+
+    function clearCrazyItems() {
+      state.crazyItems.forEach((item) => item.remove());
+      state.crazyItems.clear();
+    }
+
+    function clearLeslieCrazyItems() {
+      state.leslieCrazyItems.forEach((item) => item.remove());
+      state.leslieCrazyItems.clear();
+    }
+
+    function clearNiquerCrazyItems() {
+      state.niquerCrazyItems.forEach((item) => item.remove());
+      state.niquerCrazyItems.clear();
+    }
+
+    function clearCrazyBurstTimers() {
+      state.crazyBurstTimers.forEach((timerId) => window.clearTimeout(timerId));
+      state.crazyBurstTimers = [];
+    }
+
+    function clearLeslieCrazyBurstTimers() {
+      state.leslieCrazyBurstTimers.forEach((timerId) => window.clearTimeout(timerId));
+      state.leslieCrazyBurstTimers = [];
+    }
+
+    function clearNiquerCrazyBurstTimers() {
+      state.niquerCrazyBurstTimers.forEach((timerId) => window.clearTimeout(timerId));
+      state.niquerCrazyBurstTimers = [];
+    }
+
+    function restartNormalSpawnTimer() {
+      if (!state.hasStarted || state.spawnTimer !== null) {
+        return;
+      }
+
+      state.spawnTimer = window.setInterval(spawnMemory, config.spawnIntervalMs);
+    }
+
+    function restartActiveRemovalTimers() {
+      state.activeItems.forEach((item) => {
+        if (!item.isLeaving) {
+          scheduleRemoval(item);
+        }
+      });
+    }
+
+    function startCrazyMode() {
+      if (!state.hasStarted || state.isCrazyMode) {
+        return;
+      }
+
+      stopLeslieCrazyMode();
+      stopNiquerCrazyMode();
+      state.isCrazyMode = true;
+      document.body.classList.add("is-crazy-mode");
+      memoryWall.classList.add("is-crazy-mode");
+      stopNormalSpawnTimer();
+      clearActiveRemovalTimers();
+
+      for (let index = 0; index < config.crazyBurstCount; index += 1) {
+        const timerId = window.setTimeout(spawnCrazyMemory, index * 35);
+        state.crazyBurstTimers.push(timerId);
+      }
+
+      state.crazySpawnTimer = window.setInterval(spawnCrazyMemory, config.crazySpawnIntervalMs);
+    }
+
+    function stopCrazyMode() {
+      if (!state.isCrazyMode) {
+        return;
+      }
+
+      state.isCrazyMode = false;
+      document.body.classList.remove("is-crazy-mode");
+      memoryWall.classList.remove("is-crazy-mode");
+      window.clearInterval(state.crazySpawnTimer);
+      state.crazySpawnTimer = null;
+      clearCrazyBurstTimers();
+      clearCrazyItems();
+      restartActiveRemovalTimers();
+      restartNormalSpawnTimer();
+    }
+
+    function toggleCrazyMode() {
+      if (state.isCrazyMode) {
+        stopCrazyMode();
+        return;
+      }
+
+      startCrazyMode();
+    }
+
+    function startLeslieCrazyMode() {
+      if (!state.hasStarted || state.isLeslieCrazyMode) {
+        return;
+      }
+
+      stopCrazyMode();
+      stopNiquerCrazyMode();
+      state.isLeslieCrazyMode = true;
+      state.leslieLetterIndex = 0;
+      document.body.classList.add("is-crazy-mode", "is-leslie-crazy-mode");
+      memoryWall.classList.add("is-crazy-mode", "is-leslie-crazy-mode");
+      stopNormalSpawnTimer();
+      clearActiveRemovalTimers();
+
+      for (let index = 0; index < config.crazyBurstCount; index += 1) {
+        const timerId = window.setTimeout(spawnLeslieCrazyMemory, index * 35);
+        state.leslieCrazyBurstTimers.push(timerId);
+      }
+
+      state.leslieCrazySpawnTimer = window.setInterval(
+        spawnLeslieCrazyMemory,
+        config.crazySpawnIntervalMs
+      );
+    }
+
+    function stopLeslieCrazyMode() {
+      if (!state.isLeslieCrazyMode) {
+        return;
+      }
+
+      state.isLeslieCrazyMode = false;
+      document.body.classList.remove("is-crazy-mode", "is-leslie-crazy-mode");
+      memoryWall.classList.remove("is-crazy-mode", "is-leslie-crazy-mode");
+      window.clearInterval(state.leslieCrazySpawnTimer);
+      state.leslieCrazySpawnTimer = null;
+      clearLeslieCrazyBurstTimers();
+      clearLeslieCrazyItems();
+      restartActiveRemovalTimers();
+      restartNormalSpawnTimer();
+    }
+
+    function toggleLeslieCrazyMode() {
+      if (state.isLeslieCrazyMode) {
+        stopLeslieCrazyMode();
+        return;
+      }
+
+      startLeslieCrazyMode();
+    }
+
+    function startNiquerCrazyMode() {
+      if (!state.hasStarted || state.isNiquerCrazyMode) {
+        return;
+      }
+
+      stopCrazyMode();
+      stopLeslieCrazyMode();
+      state.isNiquerCrazyMode = true;
+      document.body.classList.add("is-crazy-mode", "is-niquer-crazy-mode");
+      memoryWall.classList.add("is-crazy-mode", "is-niquer-crazy-mode");
+      stopNormalSpawnTimer();
+      clearActiveRemovalTimers();
+
+      for (let index = 0; index < config.crazyBurstCount; index += 1) {
+        const timerId = window.setTimeout(spawnNiquerCrazyMemory, index * 35);
+        state.niquerCrazyBurstTimers.push(timerId);
+      }
+
+      state.niquerCrazySpawnTimer = window.setInterval(
+        spawnNiquerCrazyMemory,
+        config.crazySpawnIntervalMs
+      );
+    }
+
+    function stopNiquerCrazyMode() {
+      if (!state.isNiquerCrazyMode) {
+        return;
+      }
+
+      state.isNiquerCrazyMode = false;
+      document.body.classList.remove("is-crazy-mode", "is-niquer-crazy-mode");
+      memoryWall.classList.remove("is-crazy-mode", "is-niquer-crazy-mode");
+      window.clearInterval(state.niquerCrazySpawnTimer);
+      state.niquerCrazySpawnTimer = null;
+      clearNiquerCrazyBurstTimers();
+      clearNiquerCrazyItems();
+      restartActiveRemovalTimers();
+      restartNormalSpawnTimer();
+    }
+
+    function toggleNiquerCrazyMode() {
+      if (state.isNiquerCrazyMode) {
+        stopNiquerCrazyMode();
+        return;
+      }
+
+      startNiquerCrazyMode();
+    }
+
+    function shouldIgnoreSpaceShortcut(event) {
+      const target = event.target;
+
+      return Boolean(
+        target &&
+          target.closest &&
+          target.closest('button, a, input, textarea, select, [contenteditable="true"]')
+      );
+    }
+
     function getLoveLetterDelay() {
       return Math.round(
         randomBetween(config.loveLetterMinDelayMs, config.loveLetterMaxDelayMs, random)
@@ -655,6 +1085,21 @@
       if (event.key === "Escape" && !loveLetterModal.classList.contains("is-hidden")) {
         closeLoveLetter();
       }
+
+      if (event.code === "Space" && state.hasStarted && !shouldIgnoreSpaceShortcut(event)) {
+        event.preventDefault();
+        toggleCrazyMode();
+      }
+
+      if (event.key.toLowerCase() === "l" && state.hasStarted && !shouldIgnoreSpaceShortcut(event)) {
+        event.preventDefault();
+        toggleLeslieCrazyMode();
+      }
+
+      if (event.key.toLowerCase() === "n" && state.hasStarted && !shouldIgnoreSpaceShortcut(event)) {
+        event.preventDefault();
+        toggleNiquerCrazyMode();
+      }
     });
 
     return {
@@ -664,6 +1109,12 @@
         window.clearTimeout(state.revealTimer);
         window.clearTimeout(state.loveLetterTimer);
         window.clearTimeout(state.loveLetterFlightTimer);
+        window.clearInterval(state.crazySpawnTimer);
+        window.clearInterval(state.leslieCrazySpawnTimer);
+        window.clearInterval(state.niquerCrazySpawnTimer);
+        clearCrazyBurstTimers();
+        clearLeslieCrazyBurstTimers();
+        clearNiquerCrazyBurstTimers();
         if (state.confettiFrameId !== null) {
           window.cancelAnimationFrame(state.confettiFrameId);
         }
@@ -672,9 +1123,24 @@
           item.element.remove();
         });
         state.activeItems.clear();
+        clearCrazyItems();
+        clearLeslieCrazyItems();
+        clearNiquerCrazyItems();
       },
       spawnMemory,
+      spawnCrazyMemory,
+      spawnLeslieCrazyMemory,
+      spawnNiquerCrazyMemory,
       startMemoryWall,
+      startCrazyMode,
+      stopCrazyMode,
+      toggleCrazyMode,
+      startLeslieCrazyMode,
+      stopLeslieCrazyMode,
+      toggleLeslieCrazyMode,
+      startNiquerCrazyMode,
+      stopNiquerCrazyMode,
+      toggleNiquerCrazyMode,
       scheduleLoveLetterFlight,
       launchLoveLetterFlyer,
       openLoveLetter,

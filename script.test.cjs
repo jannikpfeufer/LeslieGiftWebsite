@@ -106,17 +106,72 @@ test("initial memories spawn after the wall reveal instead of during the fade", 
   const js = fs.readFileSync("script.js", "utf8");
 
   assert.match(js, /memoryWallRevealMs:\s*950/);
-  assert.match(js, /photoLifetimeMs:\s*5000/);
+  assert.match(js, /photoLifetimeMs:\s*4000/);
   assert.match(js, /window\.setTimeout\(\(\)\s*=>\s*\{[\s\S]*spawnMemory[\s\S]*memoryWallRevealMs/);
 });
 
-test("cards use random 1.5-2s inflate durations and respawn after deflate", () => {
+test("cards use random 1-1.5s inflate durations and respawn after deflate", () => {
   const js = fs.readFileSync("script.js", "utf8");
 
-  assert.match(js, /inflateDurationMinMs:\s*1500/);
-  assert.match(js, /inflateDurationMaxMs:\s*2000/);
+  assert.match(js, /inflateDurationMinMs:\s*1000/);
+  assert.match(js, /inflateDurationMaxMs:\s*1500/);
   assert.match(js, /--inflate-duration/);
   assert.match(js, /spawnMemory\(\);\s*\}\s*,\s*\{\s*once:\s*true\s*\}/);
+});
+
+test("space toggles a crazy memory flood without normal spawn limits", () => {
+  const js = fs.readFileSync("script.js", "utf8");
+  const crazySpawnBody = js.match(/function spawnCrazyMemory\(\) \{([\s\S]*?)\n    \}/)?.[1] || "";
+
+  assert.match(js, /crazySpawnIntervalMs:\s*150/);
+  assert.match(js, /crazyBurstCount:\s*8/);
+  assert.match(js, /crazyMaxItems:\s*60/);
+  assert.match(js, /leslieCrazyMaxItems:\s*120/);
+  assert.match(js, /function spawnCrazyMemory\(/);
+  assert.match(js, /function toggleCrazyMode\(/);
+  assert.match(js, /function stopCrazyMode\([\s\S]*clearCrazyItems\(\)[\s\S]*restartNormalSpawnTimer\(\)/);
+  assert.match(js, /function trimCrazyItems\(/);
+  assert.match(js, /event\.code === "Space"[\s\S]*toggleCrazyMode\(\)/);
+  assert.match(js, /state\.crazyItems\.add\(element\)/);
+  assert.match(js, /trimCrazyItems\(\)/);
+  assert.doesNotMatch(crazySpawnBody, /canSpawnItem/);
+  assert.doesNotMatch(crazySpawnBody, /scheduleRemoval/);
+});
+
+test("l toggles a Leslie sticker only crazy mode", () => {
+  const js = fs.readFileSync("script.js", "utf8");
+
+  assert.match(js, /function getLeslieStickerMemory\(/);
+  assert.match(js, /LESLIE_LETTER_POINTS/);
+  assert.match(js, /function findLeslieLetterPosition\(/);
+  assert.match(js, /LeslieSticker\.png/);
+  assert.match(js, /function spawnLeslieCrazyMemory\(/);
+  assert.match(js, /const position = findLeslieLetterPosition\(size, stageRect\)/);
+  assert.match(js, /state\.leslieLetterIndex >= LESLIE_LETTER_POINTS\.length[\s\S]*findCrazyPosition\(size, stageRect\)/);
+  assert.match(js, /state\.leslieLetterIndex \+= 1/);
+  assert.match(js, /state\.leslieLetterIndex = 0/);
+  assert.match(js, /classList\.add\("is-crazy-memory", "is-leslie-crazy-memory"\)/);
+  assert.match(js, /function toggleLeslieCrazyMode\(/);
+  assert.match(js, /event\.key\.toLowerCase\(\) === "l"[\s\S]*toggleLeslieCrazyMode\(\)/);
+  assert.match(js, /state\.leslieCrazyItems\.add\(element\)/);
+  assert.match(js, /trimLeslieCrazyItems\(\)/);
+  assert.match(js, /state\.leslieCrazyItems\.size > config\.leslieCrazyMaxItems/);
+  assert.match(js, /clearLeslieCrazyItems\(\)/);
+});
+
+test("n toggles a niquer photo only crazy mode", () => {
+  const js = fs.readFileSync("script.js", "utf8");
+
+  assert.match(js, /function getNiquerMemories\(/);
+  assert.match(js, /\/niquer\(0\[1-9\]\|1\[0-4\]\)\\\./);
+  assert.match(js, /function pickNiquerMemory\(/);
+  assert.match(js, /function spawnNiquerCrazyMemory\(/);
+  assert.match(js, /classList\.add\("is-crazy-memory", "is-niquer-crazy-memory"\)/);
+  assert.match(js, /state\.niquerCrazyItems\.add\(element\)/);
+  assert.match(js, /trimNiquerCrazyItems\(\)/);
+  assert.match(js, /function toggleNiquerCrazyMode\(/);
+  assert.match(js, /event\.key\.toLowerCase\(\) === "n"[\s\S]*toggleNiquerCrazyMode\(\)/);
+  assert.match(js, /clearNiquerCrazyItems\(\)/);
 });
 
 test("pickMemory can choose sticker memories as their own category", () => {
@@ -126,7 +181,7 @@ test("pickMemory can choose sticker memories as their own category", () => {
     { type: "sticker", src: "assets/stickers/bear.gif" }
   ];
 
-  const picked = pickMemory(memories, 0.18, 0.2, () => 0.1);
+  const picked = pickMemory(memories, 0.08, 0.2, () => 0.1);
 
   assert.equal(picked.type, "sticker");
   assert.equal(picked.src, "assets/stickers/bear.gif");
@@ -136,7 +191,7 @@ test("stickers render as free floating images without memory card chrome", () =>
   const js = fs.readFileSync("script.js", "utf8");
   const css = fs.readFileSync("styles.css", "utf8");
 
-  assert.match(js, /stickerChance:\s*0\.14/);
+  assert.match(js, /stickerChance:\s*0\.12/);
   assert.match(js, /stickers:\s*memories\.filter\(\(memory\)\s*=>\s*memory\.type === "sticker"\)/);
   assert.match(js, /function buildSticker\(/);
   assert.match(js, /className = "sticker-item"/);

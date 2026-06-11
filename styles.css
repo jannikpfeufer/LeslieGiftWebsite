@@ -404,6 +404,14 @@ body {
   animation: shrinkOut 700ms linear forwards;
 }
 
+.memory-item.is-crazy-memory .memory-item__float {
+  animation: none;
+}
+
+.memory-item.is-crazy-memory.is-leaving .memory-item__pop {
+  animation: none;
+}
+
 .memory-item:focus-visible .memory-item__inner,
 .memory-item:hover .memory-item__inner {
   transform: translateY(-11px) scale(1.07);
@@ -502,6 +510,14 @@ body {
 
 .sticker-item.is-leaving {
   animation: stickerShrinkOut 900ms linear forwards;
+}
+
+.sticker-item.is-crazy-memory {
+  animation: stickerInflateIn var(--inflate-duration, 1800ms) linear forwards;
+}
+
+.sticker-item.is-crazy-memory.is-leaving {
+  animation: none;
 }
 
 .love-letter-flyer {
