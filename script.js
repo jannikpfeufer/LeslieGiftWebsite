@@ -15,7 +15,7 @@
     photoLifetimeMs: 4000,
     inflateDurationMinMs: 1000,
     inflateDurationMaxMs: 1500,
-    noteChance: 0.08,
+    noteChance: 0.05,
     stickerChance: 0.12,
     minDistancePx: 24,
     bottomSafeZonePx: 36,

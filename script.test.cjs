@@ -181,7 +181,7 @@ test("pickMemory can choose sticker memories as their own category", () => {
     { type: "sticker", src: "assets/stickers/bear.gif" }
   ];
 
-  const picked = pickMemory(memories, 0.08, 0.2, () => 0.1);
+  const picked = pickMemory(memories, 0.05, 0.2, () => 0.1);
 
   assert.equal(picked.type, "sticker");
   assert.equal(picked.src, "assets/stickers/bear.gif");
@@ -230,6 +230,7 @@ test("intro copy starts memories from the page without a button", () => {
   assert.doesNotMatch(html, /enterButton|Start the memories|intro__button/);
   assert.doesNotMatch(html, /intro__signature/);
   assert.match(html, /intro__love-line--first">I love you<\/span>/);
+  assert.match(html, /P\.S\. in the following there will be a hint to your gift/);
   assert.doesNotMatch(html, /intro__love-line--second/);
   assert.doesNotMatch(js, /enterButton/);
   assert.match(js, /intro\.addEventListener\("click", startMemoryWall\)/);
@@ -280,7 +281,7 @@ test("welcome gate appears before the birthday intro", () => {
   const js = fs.readFileSync("script.js", "utf8");
 
   assert.match(html, /id="welcome"/);
-  assert.match(html, /Coucou mon Amoureuse, are you ready to see your gift\?/);
+  assert.match(html, /Coucou mon Amoureuse, are you ready to receive your gift\?/);
   assert.match(html, /id="acceptGift"/);
   assert.match(html, /id="declineGift"/);
   assert.match(html, /id="backToQuestion"/);
@@ -300,6 +301,8 @@ test("intro love text fades in place later and spawn area has extra bottom space
   assert.match(css, /\.intro__content[\s\S]*translateY\(calc\(-1 \* clamp/);
   assert.match(css, /\.intro__title[\s\S]*line-height:\s*1\.02/);
   assert.match(css, /\.intro__love-line[\s\S]*animation:\s*fadeInPlace\s+1000ms\s+ease\s+1600ms\s+both/);
+  assert.match(css, /\.intro__ps[\s\S]*font-size:\s*clamp\(0\.9rem,\s*2vw,\s*1\.08rem\)/);
+  assert.match(css, /\.intro__ps[\s\S]*animation:\s*fadeInPlace\s+1000ms\s+ease\s+2600ms\s+both/);
   assert.match(css, /\.intro__love-line--second[\s\S]*animation-delay:\s*3600ms/);
   assert.match(css, /@keyframes fadeInPlace[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1/);
   assert.doesNotMatch(css, /@keyframes fadeInPlace[\s\S]*translateY/);

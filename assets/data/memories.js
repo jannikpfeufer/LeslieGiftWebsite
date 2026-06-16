@@ -666,6 +666,114 @@ window.memories = [
     caption: "Wuhuu finally new nails"
   },
   {
+    type: "photo",
+    src: "assets/photos/Ahhhhhh.jpeg",
+    alt: "Ahhhhhh",
+    caption: "Ahhhhhh"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Ahhhh_3.jpeg",
+    alt: "Ahhhh 3",
+    caption: "Ahhhh 3"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Bisouss.jpeg",
+    alt: "Bisouss",
+    caption: "Bisouss"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Choquee.jpeg",
+    alt: "Choquee",
+    caption: "Choquee"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Coucou.jpeg",
+    alt: "Coucou",
+    caption: "Coucou"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Favorite_travel_partner.jpeg",
+    alt: "Favorite travel partner",
+    caption: "Favorite travel partner"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Je_t'aime_a_la_follie.jpeg",
+    alt: "Je t'aime a la follie",
+    caption: "Je t'aime a la follie"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/La_folle.jpeg",
+    alt: "La folle",
+    caption: "La folle"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Ma_coiffeuse_preferee.jpeg",
+    alt: "Ma coiffeuse preferee",
+    caption: "Ma coiffeuse preferee"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Model.jpeg",
+    alt: "Model",
+    caption: "Model"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Morning_coffee_princess.jpeg",
+    alt: "Morning coffee princess",
+    caption: "Morning coffee princess"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/On_est_laa.jpeg",
+    alt: "On est laa",
+    caption: "On est laa"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/On_est_laaa.jpeg",
+    alt: "On est laaa",
+    caption: "On est laaa"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Soo_funny.jpeg",
+    alt: "Soo funny",
+    caption: "Soo funny"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Sushi_lover.jpeg",
+    alt: "Sushi lover",
+    caption: "Sushi lover"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/The_boss.jpeg",
+    alt: "The boss",
+    caption: "The boss"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/The_clumsy_one.jpeg",
+    alt: "The clumsy one",
+    caption: "The clumsy one"
+  },
+  {
+    type: "photo",
+    src: "assets/photos/Troop_jolis.jpeg",
+    alt: "Troop jolis",
+    caption: "Troop jolis"
+  },
+  {
     type: "sticker",
     src: "assets/stickers/bear_otter_landing.png",
     alt: "Bear and otter hugging sticker"
@@ -714,10 +822,6 @@ window.memories = [
   {
     type: "note",
     text: "I love to be with you"
-  },
-  {
-    type: "note",
-    text: "I love your smile"
   },
   {
     type: "note",
