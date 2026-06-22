@@ -610,6 +610,8 @@ body {
 .love-letter-modal__panel {
   position: relative;
   width: min(92vw, 560px);
+  max-height: min(86vh, 760px);
+  overflow: auto;
   padding: clamp(30px, 6vw, 48px);
   border: 1px solid rgba(255, 255, 255, 0.74);
   border-radius: 8px;
@@ -647,8 +649,26 @@ body {
 .love-letter-modal__text {
   margin: 22px 0 0;
   color: var(--soft-ink);
-  font-size: clamp(1rem, 2.4vw, 1.22rem);
-  line-height: 1.65;
+  font-size: clamp(0.96rem, 2vw, 1.08rem);
+  line-height: 1.58;
+}
+
+.love-letter-modal__text p {
+  margin: 0;
+}
+
+.love-letter-modal__text p + p {
+  margin-top: 16px;
+}
+
+.love-letter-modal__signature {
+  margin: 26px 0 0;
+  color: var(--rose-deep);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 4vw, 2.35rem);
+  font-style: italic;
+  line-height: 1;
+  text-align: right;
 }
 
 @keyframes titleIn {

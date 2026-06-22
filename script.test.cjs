@@ -209,9 +209,13 @@ test("love letter flyer and modal are wired into the memory wall", () => {
   assert.match(html, /id="loveLetterModal"/);
   assert.match(html, /id="closeLoveLetter"/);
   assert.match(html, /My love,/);
+  assert.match(html, /Happy birthday to the most wonderful person I know\./);
+  assert.match(html, /I have never loved anyone the way I love you\./);
+  assert.match(html, /class="love-letter-modal__signature">Jannik<\/p>/);
   assert.match(css, /\.love-letter-flyer\.is-flying[\s\S]*loveLetterFlight/);
   assert.match(css, /@keyframes loveLetterFlight[\s\S]*25%[\s\S]*50%[\s\S]*75%[\s\S]*100%/);
   assert.match(css, /\.love-letter-modal[\s\S]*position:\s*absolute/);
+  assert.match(css, /\.love-letter-modal__signature[\s\S]*text-align:\s*right/);
   assert.match(js, /loveLetterMinDelayMs:\s*45000/);
   assert.match(js, /loveLetterMaxDelayMs:\s*60000/);
   assert.match(js, /loveLetterFlightDurationMs:\s*9000/);
@@ -219,6 +223,7 @@ test("love letter flyer and modal are wired into the memory wall", () => {
   assert.match(js, /function launchLoveLetterFlyer\(/);
   assert.match(js, /function openLoveLetter\(/);
   assert.match(js, /function closeLoveLetter\(/);
+  assert.match(js, /event\.key\.toLowerCase\(\) === "b"[\s\S]*openLoveLetter\(\)/);
   assert.match(js, /scheduleLoveLetterFlight\(\)/);
 });
 

@@ -1086,6 +1086,11 @@
         closeLoveLetter();
       }
 
+      if (event.key.toLowerCase() === "b" && state.hasStarted && !shouldIgnoreSpaceShortcut(event)) {
+        event.preventDefault();
+        openLoveLetter();
+      }
+
       if (event.code === "Space" && state.hasStarted && !shouldIgnoreSpaceShortcut(event)) {
         event.preventDefault();
         toggleCrazyMode();

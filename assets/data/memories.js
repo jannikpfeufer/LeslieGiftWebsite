@@ -644,7 +644,7 @@ window.memories = [
   {
     type: "photo",
     src: "assets/photos/Will_you_be_my_girlfriend.jpeg",
-    alt: "Will you be my girlfriend",
+    alt: "Will you be my girlfriend?",
     caption: "Will you be my girlfriend"
   },
   {
